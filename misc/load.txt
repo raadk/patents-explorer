@@ -1,0 +1,31 @@
+
+if (REFRESH_RDS) {
+  library(OECD)
+  structure <- get_data_structure("PATS_IPC")
+  patents <- read.csv(file.path("data", "patents-2016.csv"))
+  names(patents)[grepl("KINDPATENT", names(patents))] <- "KINDPATENT"
+  names(patents)[grepl("TIME", names(patents))] <- "YEAR"
+
+  patents$COUNTRY <- structure$LOCATION$label[match(patents$LOCATION, structure$LOCATION$id)]
+  patents$Unit.Code <- NULL
+  patents$Flag.Codes <- NULL
+  patents$PowerCode.Code <- NULL
+  patents$IPC <- NULL
+  patents$Reference.Period.Code <- NULL
+  patents <- patents[, c(ncol(patents), 1:(ncol(patents) - 1))]
+  reference_period <- unique(patents$Reference.Period.Code)
+
+
+  colnames(patents)[ncol(patents)] <- "patent_applications"
+
+
+  rd <- read.csv(file.path("data", "gerd-funds-2016.csv"))
+  rd <- rd[, c("COU", "YEAR", "Value")]
+  colnames(rd)[1] <- "LOCATION"
+  colnames(rd)[ncol(rd)] <- "GERD"
+
+  patents <- merge(patents, rd, all.x = TRUE)
+
+
+  save(structure, patents, reference_period, file = file.path("data", "patents-2016.Rds"))
+}
